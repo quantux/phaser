@@ -18,6 +18,8 @@ var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create
 
 var plataforms;
 var player;
+var score = 0;
+var scoreText;
 
 function preload() {
 	game.load.image('sky', 'assets/sky.png');
@@ -33,7 +35,19 @@ function create() {
 	game.add.sprite(0, 0, 'sky');
 
 	platforms = game.add.group();
+	stars = game.add.group();
 	platforms.enableBody = true;
+	stars.enableBody = true;
+
+	// Score Text
+	scoreText = game.add.text(16, 16, 'Score: 0', {fontSize: '32px', fill: '#000'});
+
+	for (var i = 0; i < 12; i++) {
+		var star = stars.create(i * 70, 0, 'star');
+
+		star.body.gravity.y = 12;
+		star.body.bounce.y = 0.7 + Math.random() * 0.2;
+	}
 
 	var ground = platforms.create(0, game.world.height - 64, 'ground');
 
@@ -62,16 +76,55 @@ function create() {
 	player.animations.add('left', [0, 1, 2, 3], 10, true);
 	player.animations.add('right', [5, 6, 7, 8], 10, true);
 
-
-
 }
 
 function update() {
 
 	// Collide the player and the stars with the platforms
 	game.physics.arcade.collide(player, platforms);
-	game.input.keyboard.createCursorKeys();
+	game.physics.arcade.collide(platforms, stars);
+	game.physics.arcade.overlap(player, stars, collectStars, null, this);
+	cursors = game.input.keyboard.createCursorKeys();
 
+	//  Reset the players velocity (movement)
+    player.body.velocity.x = 0;
+
+    if (cursors.left.isDown)
+    {
+        //  Move to the left
+        player.body.velocity.x = -150;
+
+        player.animations.play('left');
+    }
+    else if (cursors.right.isDown)
+    {
+        //  Move to the right
+        player.body.velocity.x = 150;
+
+        player.animations.play('right');
+    }
+    else
+    {
+        //  Stand still
+        player.animations.stop();
+
+        player.frame = 4;
+    }
+
+    //  Allow the player to jump if they are touching the ground.
+    if (cursors.up.isDown && player.body.touching.down)
+    {
+        player.body.velocity.y = -350;
+    }
+
+}
+
+function collectStars(player, star) {
+	star.kill();
+
+	// update the score
+	score += 10;
+	scoreText.text = "Score: " + score;
 }
 
 </script>
